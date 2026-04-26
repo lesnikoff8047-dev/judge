@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>LIVE Табло Судьи</title>
+
+<style>
+body {
+  margin: 0;
+  padding: 20px;
+  background: #0f0f0f;
+  color: white;
+  font-family: Arial;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: #1e1e1e;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  border-left: 4px solid #00c853;
+}
+
+.athlete {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.count {
+  float: right;
+  background: #333;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.cps {
+  margin-top: 10px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🧑‍⚖️ LIVE Табло Судьи</h1>
+
+<div id="board"></div>
+
+<script>
+
+const URL = "https://script.google.com/macros/s/AKfycbxQlJjaa7dieWA2K04P5KztZ3RWr_-iPrXWDxUNbS3F6WhDyqigzy7K788DGLqba9pp/exec";
+
+async function loadData() {
+  try {
+    const res = await fetch(URL);
+    const data = await res.json();
+
+    const grouped = {};
+
+    data.forEach(item => {
+      if (!grouped[item.athlete]) {
+        grouped[item.athlete] = [];
+      }
+      grouped[item.athlete].push(item);
+    });
+
+    render(grouped);
+
+  } catch (e) {
+    console.log("Ошибка:", e);
+  }
+}
+
+function render(grouped) {
+  const board = document.getElementById("board");
+  board.innerHTML = "";
+
+  const athletes = Object.keys(grouped).sort();
+
+  athletes.forEach(id => {
+    const cps = grouped[id];
+
+    const cpsText = cps.map(c => {
+
+      // цвет логики
+      const color = c.type === "repeat" ? "#ff5252" : "#00e676";
+
+      return `
+        <span style="color:${color}; font-weight:bold">
+          КП ${c.cp} (${c.time})
+        </span>
+      `;
+    }).join(" → ");
+
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <div class="athlete">
+        Спортсмен: ${id}
+        <span class="count">${cps.length} КП</span>
+      </div>
+      <div class="cps">${cpsText}</div>
+    `;
+
+    board.appendChild(div);
+  });
+}
+
+// автообновление
+setInterval(loadData, 2000);
+loadData();
+
+</script>
+
+</body>
+</html>
